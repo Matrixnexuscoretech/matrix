@@ -13,10 +13,10 @@ export default function StatsCounter() {
   const [counts, setCounts] = useState([0, 0, 0, 0]);
 
   const stats: Stat[] = [
-    { value: 200, suffix: '+', label: 'Projects Delivered', prefix: '' },
+    { value: 25, suffix: '+', label: 'Projects Delivered', prefix: '' },
     { value: 98, suffix: '%', label: 'Client Satisfaction', prefix: '' },
-    { value: 50, suffix: '+', label: 'Team Members', prefix: '' },
-    { value: 15, suffix: '+', label: 'Countries Served', prefix: '' },
+    { value: 10, suffix: '+', label: 'Team Members', prefix: '' },
+    { value: 5, suffix: '+', label: 'Countries Served', prefix: '' },
   ];
 
   useEffect(() => {
