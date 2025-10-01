@@ -1,6 +1,34 @@
 import { useState } from 'react';
 import { Send, CheckCircle, X, GraduationCap } from 'lucide-react';
 import Button from './Button';
+import emailjs from "emailjs-com";
+
+const sendEmails = (formData: ApplicationFormData) => {
+  // Applicant email
+  emailjs.send(
+    "service_rg7fxux",
+    "template_yzk8jgb",
+    {
+      to_name: formData.fullName,
+      to_email: formData.email,
+      course: formData.course,
+    },
+    "QY3q6e8yM6y9Qq0Dm"
+  );
+
+  // Admin email
+  emailjs.send(
+    "service_3lf0t2o",
+    "template_81kw8zp",
+    {
+      from_name: formData.fullName,
+      from_email: formData.email,
+      message: formData.message,
+    },
+    "QY3q6e8yM6y9Qq0Dm"
+  );
+};
+
 
 interface ApplicationFormData {
   fullName: string;
@@ -76,8 +104,10 @@ export default function Application() {
     setIsSubmitting(true);
 
     try {
-      const { submitEnrollment, sendEnrollmentEmails } = await import('../lib/supabase');
+      // Import your Supabase helper
+      const { submitEnrollment } = await import("../lib/supabase");
 
+      // Save form data to Supabase
       const enrollment = await submitEnrollment({
         full_name: formData.fullName,
         email: formData.email,
@@ -87,32 +117,29 @@ export default function Application() {
         consent: formData.consent,
       });
 
-      const resendApiKey = prompt('Please enter your Resend API key to send confirmation emails:');
+      // ✅ Send emails with EmailJS (to applicant + admin)
+      sendEmails(formData);
 
-      if (resendApiKey) {
-        try {
-          await sendEnrollmentEmails(enrollment, resendApiKey);
-        } catch (emailError) {
-          console.error('Email sending error:', emailError);
-        }
-      }
-
+      // Show success UI
       setShowSuccess(true);
       setFormData({
-        fullName: '',
-        email: '',
-        phone: '',
-        course: '',
-        message: '',
+        fullName: "",
+        email: "",
+        phone: "",
+        course: "",
+        message: "",
         consent: false,
       });
     } catch (error) {
-      console.error('Application error:', error);
-      alert('There was an error submitting your application. Please try again or contact us directly.');
+      console.error("Application error:", error);
+      alert(
+        "There was an error submitting your application. Please try again or contact us directly."
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
+
 
   const closeModal = () => {
     setShowModal(false);
