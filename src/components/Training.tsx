@@ -389,25 +389,6 @@ export default function Training() {
                   </div>
 
                   <div>
-                    <label htmlFor="cohort" className="block text-sm font-medium text-charcoal mb-2">
-                      Preferred Start Date
-                    </label>
-                    <select
-                      id="cohort"
-                      value={formData.cohort}
-                      onChange={(e) => setFormData({ ...formData, cohort: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus-visible-ring"
-                    >
-                      <option value="">Select a cohort</option>
-                      {cohorts.map((cohort) => (
-                        <option key={cohort} value={cohort}>
-                          {cohort}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
                     <label htmlFor="message" className="block text-sm font-medium text-charcoal mb-2">
                       Message (Optional)
                     </label>
