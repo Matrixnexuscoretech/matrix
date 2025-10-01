@@ -1,13 +1,37 @@
 import { useState } from 'react';
 import { Calendar, Users, Award, CheckCircle, X } from 'lucide-react';
 import Button from './Button';
+import emailjs from "emailjs-com";
+
+const sendEmails = (formData: EnrollmentFormData) => {
+  emailjs.send(
+    "service_rg7fxux",
+    "template_yzk8jgb",
+    {
+      to_name: formData.fullName,
+      to_email: formData.email,
+      course: formData.course,
+    },
+    "QY3q6e8yM6y9Qq0Dm"
+  );
+
+  emailjs.send(
+    "service_3lf0t2o",
+    "template_81kw8zp",
+    {
+      from_name: formData.fullName,
+      from_email: formData.email,
+      message: formData.message,
+    },
+    "QY3q6e8yM6y9Qq0Dm"
+  );
+};
 
 interface EnrollmentFormData {
   fullName: string;
   email: string;
   phone: string;
   course: string;
-  cohort: string;
   message: string;
   consent: boolean;
 }
@@ -22,7 +46,6 @@ export default function Training() {
     email: '',
     phone: '',
     course: '',
-    cohort: '',
     message: '',
     consent: false,
   });
@@ -86,14 +109,6 @@ export default function Training() {
     },
   ];
 
-  const cohorts = [
-    'January 2026',
-    'March 2026',
-    'May 2026',
-    'July 2026',
-    'September 2026',
-    'November 2026',
-  ];
 
   const validateForm = (): boolean => {
     const newErrors: Partial<EnrollmentFormData> = {};
@@ -141,10 +156,11 @@ export default function Training() {
         email: formData.email,
         phone: formData.phone,
         course: formData.course,
-        cohort: formData.cohort || undefined,
         message: formData.message || undefined,
         consent: formData.consent,
       });
+
+      sendEmails(formData);
 
       setShowSuccess(true);
       setFormData({
@@ -152,7 +168,6 @@ export default function Training() {
         email: '',
         phone: '',
         course: '',
-        cohort: '',
         message: '',
         consent: false,
       });
@@ -278,13 +293,15 @@ export default function Training() {
                     <CheckCircle className="w-12 h-12 text-white" />
                   </div>
                   <div className="space-y-2">
-                    <h3 className="text-navy">Thank you for enrolling!</h3>
+                    <h3 className="text-navy">Enrollment Submitted Successfully!</h3>
                     <p className="text-charcoal">
-                      We've received your enrollment for <strong>{formData.course}</strong>.
+                      Thank you for enrolling in <strong>{formData.course}</strong>.
+                    </p>
+                    <p className="text-charcoal/80">
+                      Check your email at <strong>{formData.email}</strong> for confirmation details and next steps.
                     </p>
                     <p className="text-charcoal/80">
                       Our team will contact you via WhatsApp at <strong>{formData.phone}</strong> within 30 minutes.
-                      Please check your email for confirmation details.
                     </p>
                   </div>
                   <Button variant="primary" onClick={closeModal}>
@@ -373,6 +390,7 @@ export default function Training() {
                       }`}
                       aria-invalid={!!errors.course}
                       aria-describedby={errors.course ? 'course-error' : undefined}
+                      disabled
                     >
                       <option value="">Select a course</option>
                       {courses.map((course) => (
@@ -398,6 +416,7 @@ export default function Training() {
                       onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                       maxLength={500}
                       rows={3}
+                      placeholder="Tell us why you want to join this course..."
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus-visible-ring"
                     />
                     <p className="text-sm text-charcoal/60 mt-1">
