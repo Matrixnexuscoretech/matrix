@@ -7,40 +7,41 @@ export default function Testimonials() {
 
   const testimonials = [
     {
-      quote: 'Matrix Nexus delivered beyond expectations. Our sales tripled in the first quarter after launching the new platform.',
-      author: 'Sarah Johnson',
-      position: 'CEO, TechMart Solutions',
+      quote: 'Matrix Nexus delivered beyond expectations. Our restaurant website boosted reservations and customer loyalty instantly.',
+      author: 'Mary Wairimu',
+      position: 'Owner, Taste of Nairobi Restaurant',
       rating: 5,
     },
     {
-      quote: 'The platform transformed how we engage with our donors. Transparency has never been easier, and our retention rates have soared.',
+      quote: 'The donation platform transformed how we engage with our supporters. Transparency has never been easier, and trust keeps growing.',
       author: 'David Kimani',
-      position: 'Director, Hope Foundation',
+      position: 'Director, Hope Foundation Kenya',
       rating: 5,
     },
     {
-      quote: 'Our online presence is now stronger than our physical campuses. The LMS platform is intuitive and our students love it.',
+      quote: 'Our online academy is now stronger than our physical classrooms. The LMS is seamless, and our students across Africa love it.',
       author: 'Dr. Aisha Mwangi',
-      position: 'Academic Director, EduTech Academy',
+      position: 'Founder, Forex Tutors Kenya',
       rating: 5,
     },
     {
-      quote: 'Game-changer for our operations. We can now manage 20 locations from a single dashboard with real-time synchronization.',
+      quote: 'Total game-changer! We now manage rentals, tenants, and payments from one dashboard with real-time updates across branches.',
       author: 'Michael Ochieng',
-      position: 'Operations Manager, FoodChain Group',
+      position: 'Property Manager, Ochieng Real Estate',
       rating: 5,
     },
     {
-      quote: 'Patient satisfaction scores increased dramatically. The portal is intuitive, secure, and has reduced no-shows by half.',
-      author: 'Dr. Grace Wanjiru',
-      position: 'Chief Medical Officer, HealthPlus Hospital',
+      quote: 'Shoppers love the comparison tool. Our electronics deals are flying off the shelves, and vendor sales have shot up dramatically.',
+      author: 'Grace Wanjiru',
+      position: 'CEO, ElectroDeals Kenya',
       rating: 5,
     },
   ];
 
+
   const stats = [
-    { value: '150+', label: 'Projects Delivered' },
-    { value: '500+', label: 'Students Trained' },
+    { value: '20+', label: 'Projects Delivered' },
+    { value: '100+', label: 'Students Trained' },
     { value: '98%', label: 'Client Satisfaction' },
     { value: '24/7', label: 'Support Available' },
   ];

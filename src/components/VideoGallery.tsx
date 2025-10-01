@@ -7,25 +7,25 @@ export default function VideoGallery() {
   const videos = [
     {
       title: 'Who We Are — Matrix Nexus Coretech',
-      thumbnail: 'https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=800',
+      thumbnail: 'https://res.cloudinary.com/dh1oznegj/image/upload/v1759358908/IMG_20250901_204106_905_h79pfg.jpg?auto=compress&cs=tinysrgb&w=800',
       videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
       description: 'Discover our story, mission, and the team behind Matrix Nexus Coretech',
     },
     {
       title: 'Our Services — Web & Marketing',
-      thumbnail: 'https://images.pexels.com/photos/3184292/pexels-photo-3184292.jpeg?auto=compress&cs=tinysrgb&w=800',
+      thumbnail: 'https://res.cloudinary.com/dh1oznegj/image/upload/v1759358901/IMG-20250720-WA0052_2_u3qvtp.jpg?auto=compress&cs=tinysrgb&w=800',
       videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
       description: 'Explore our comprehensive web development and digital marketing solutions',
     },
     {
       title: 'Training Highlights',
-      thumbnail: 'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=800',
+      thumbnail: 'https://res.cloudinary.com/dh1oznegj/image/upload/v1759357131/Screenshot_2025-10-02_010855_agyo2m.png?auto=compress&cs=tinysrgb&w=800',
       videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
       description: 'See our training programs in action and hear from our successful graduates',
     },
     {
       title: 'Case Study: E-Commerce Transformation',
-      thumbnail: 'https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=800',
+      thumbnail: 'https://res.cloudinary.com/dh1oznegj/image/upload/v1759358901/ChatGPT_Image_May_31_2025_08_15_53_PM_skyzmy.png?auto=compress&cs=tinysrgb&w=800',
       videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
       description: 'How we helped a client triple their online sales in just 90 days',
     },
