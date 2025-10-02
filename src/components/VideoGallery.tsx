@@ -8,25 +8,25 @@ export default function VideoGallery() {
     {
       title: 'Who We Are — Matrix Nexus Coretech',
       thumbnail: 'https://res.cloudinary.com/dh1oznegj/image/upload/v1759358908/IMG_20250901_204106_905_h79pfg.jpg?auto=compress&cs=tinysrgb&w=800',
-      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+      videoUrl: '',
       description: 'Discover our story, mission, and the team behind Matrix Nexus Coretech',
     },
     {
       title: 'Our Services — Web & Marketing',
       thumbnail: 'https://res.cloudinary.com/dh1oznegj/image/upload/v1759358901/IMG-20250720-WA0052_2_u3qvtp.jpg?auto=compress&cs=tinysrgb&w=800',
-      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+      videoUrl: 'https://player.cloudinary.com/embed/?cloud_name=dh1oznegj&public_id=services_and_web_marketing_jwgr20&profile=cld-default',
       description: 'Explore our comprehensive web development and digital marketing solutions',
     },
     {
       title: 'Training Highlights',
       thumbnail: 'https://res.cloudinary.com/dh1oznegj/image/upload/v1759357131/Screenshot_2025-10-02_010855_agyo2m.png?auto=compress&cs=tinysrgb&w=800',
-      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+      videoUrl: 'https://player.cloudinary.com/embed/?cloud_name=dh1oznegj&public_id=training_highlight_mxmfgx&profile=cld-default',
       description: 'See our training programs in action and hear from our successful graduates',
     },
     {
       title: 'Case Study: E-Commerce Transformation',
       thumbnail: 'https://res.cloudinary.com/dh1oznegj/image/upload/v1759358901/ChatGPT_Image_May_31_2025_08_15_53_PM_skyzmy.png?auto=compress&cs=tinysrgb&w=800',
-      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+      videoUrl: 'https://player.cloudinary.com/embed/?cloud_name=dh1oznegj&public_id=aaaaaaaaaaaaa_jj8mhm&profile=cld-default',
       description: 'How we helped a client triple their online sales in just 90 days',
     },
   ];
