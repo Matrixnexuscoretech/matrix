@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navigation from './components/Navigation';
 import Hero from './components/Hero';
 import MagicSection from './components/MagicSection';
@@ -16,25 +16,7 @@ import Footer from './components/Footer';
 import ParallaxBackground from './components/ParallaxBackground';
 import AdminPage from './components/AdminPage';
 
-function App() {
-  const [showAdmin, setShowAdmin] = useState(false);
-
-  useEffect(() => {
-    const isAdminRoute = window.location.pathname === '/admin' || window.location.hash === '#admin';
-    setShowAdmin(isAdminRoute);
-
-    const handleHashChange = () => {
-      setShowAdmin(window.location.hash === '#admin');
-    };
-
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
-
-  if (showAdmin) {
-    return <AdminPage />;
-  }
-
+function MainApp() {
   return (
     <div className="min-h-screen relative">
       <ParallaxBackground />
@@ -55,6 +37,26 @@ function App() {
       </main>
       <Footer />
     </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        {/* Main application route */}
+        <Route path="/" element={<MainApp />} />
+        
+        {/* Admin route */}
+        <Route path="/admin" element={<AdminPage />} />
+        
+        {/* Admin route with nested paths */}
+        <Route path="/admin/*" element={<AdminPage />} />
+        
+        {/* Catch all route - redirect to home */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Router>
   );
 }
 

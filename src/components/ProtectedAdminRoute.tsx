@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+// components/ProtectedAdminRoute.tsx
+import { useEffect, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import AdminAuth from './AdminAuth';
 import AdminDashboard from './AdminDashboard';
 
-export default function AdminPage() {
+export default function ProtectedAdminRoute() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -33,23 +35,16 @@ export default function AdminPage() {
     }
   };
 
-  const handleAuthenticated = () => {
-    setIsAuthenticated(true);
-  };
-
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-navy via-navy-dark to-navy flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-electric-yellow mx-auto mb-4"></div>
-          <div className="text-white text-xl">Loading Admin Panel...</div>
-        </div>
+      <div className="min-h-screen bg-navy flex items-center justify-center">
+        <div className="text-white text-xl">Loading...</div>
       </div>
     );
   }
 
   if (!isAuthenticated) {
-    return <AdminAuth onAuthenticated={handleAuthenticated} />;
+    return <AdminAuth onAuthenticated={() => setIsAuthenticated(true)} />;
   }
 
   return <AdminDashboard onLogout={handleLogout} />;

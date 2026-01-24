@@ -1,91 +1,110 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
+import type { Enrollment } from '../types';
 
-let supabase: SupabaseClient | null = null;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseServiceKey = import.meta.env.VITE_SUPABASE_SERVICE_KEY;
 
-// Load config.json from public/
-async function loadConfig() {
-  const res = await fetch('/config.json');
-  if (!res.ok) {
-    throw new Error('Failed to load config.json');
+// Public client for general use
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// Admin client (for server-side operations only)
+export const getAdminClient = () => {
+  if (!supabaseServiceKey) {
+    throw new Error('Service key not available in client-side code');
   }
-  return res.json();
-}
+  return createClient(supabaseUrl, supabaseServiceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  });
+};
 
-// Lazy initialize Supabase client
-export async function getSupabase(): Promise<SupabaseClient> {
-  if (!supabase) {
-    const config = await loadConfig();
-    supabase = createClient(config.SUPABASE_URL, config.SUPABASE_ANON_KEY);
-  }
-  return supabase;
-}
+// Authentication helper
+export const getSupabase = () => supabase;
 
-export interface Enrollment {
-  id?: string;
+// Check if user is authenticated
+export const checkAdminAuth = async (): Promise<boolean> => {
+  const { data: { session } } = await supabase.auth.getSession();
+  return !!session;
+};
+
+// Login function
+export const adminLogin = async (email: string, password: string) => {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
+  
+  if (error) throw error;
+  return data;
+};
+
+// Logout function
+export const adminLogout = async () => {
+  const { error } = await supabase.auth.signOut();
+  if (error) throw error;
+};
+
+// Get all enrollments
+export const getEnrollments = async (): Promise<Enrollment[]> => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Not authenticated');
+
+  const { data, error } = await supabase
+    .from('enrollments')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data as Enrollment[];
+};
+
+// Submit new enrollment
+export const submitEnrollment = async (data: {
   full_name: string;
   email: string;
   phone: string;
   course: string;
   message?: string;
   consent: boolean;
-  status?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export async function submitEnrollment(data: Enrollment) {
-  const client = await getSupabase();
-  const { data: enrollment, error } = await client
+}): Promise<Enrollment> => {
+  const { data: enrollment, error } = await supabase
     .from('enrollments')
-    .insert([data])
+    .insert([{
+      ...data,
+      status: 'pending'
+    }])
     .select()
     .single();
 
   if (error) throw error;
-  return enrollment;
-}
+  return enrollment as Enrollment;
+};
 
-export async function sendEnrollmentEmails(enrollment: Enrollment, resendApiKey: string) {
-  const config = await loadConfig();
-  const apiUrl = `${config.SUPABASE_URL}/functions/v1/send-enrollment-emails`;
+// Update enrollment status
+export const updateEnrollmentStatus = async (id: string, status: string): Promise<void> => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Not authenticated');
 
-  const response = await fetch(apiUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${config.SUPABASE_ANON_KEY}`,
-    },
-    body: JSON.stringify({ enrollment, resendApiKey }),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to send emails');
-  }
-
-  return response.json();
-}
-
-export async function getEnrollments() {
-  const client = await getSupabase();
-  const { data, error } = await client
-    .from('enrollments')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
-  return data;
-}
-
-export async function updateEnrollmentStatus(id: string, status: string) {
-  const client = await getSupabase();
-  const { data, error } = await client
+  const { error } = await supabase
     .from('enrollments')
     .update({ status })
-    .eq('id', id)
-    .select()
-    .single();
+    .eq('id', id);
 
   if (error) throw error;
-  return data;
-}
+};
+
+// Delete enrollment
+export const deleteEnrollment = async (id: string): Promise<void> => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Not authenticated');
+
+  const { error } = await supabase
+    .from('enrollments')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
+};

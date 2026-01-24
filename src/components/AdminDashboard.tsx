@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CircleUser as UserCircle, Mail, Phone, BookOpen, Calendar, Clock, Filter, Download, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { CircleUser as UserCircle, Mail, Phone, BookOpen, Calendar, Clock, Filter, Download, CheckCircle, XCircle, AlertCircle, LogOut } from 'lucide-react';
 import Button from './Button';
 
 interface Enrollment {
@@ -15,17 +15,22 @@ interface Enrollment {
   updated_at: string;
 }
 
-export default function AdminDashboard() {
+interface AdminDashboardProps {
+  onLogout: () => void;
+}
+
+export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEnrollment, setSelectedEnrollment] = useState<Enrollment | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     loadEnrollments();
-  }, []);
+  }, [refreshTrigger]);
 
   const loadEnrollments = async () => {
     setIsLoading(true);
@@ -46,10 +51,36 @@ export default function AdminDashboard() {
     try {
       const { updateEnrollmentStatus } = await import('../lib/supabase');
       await updateEnrollmentStatus(id, newStatus);
-      await loadEnrollments();
+      // Refresh the data
+      loadEnrollments();
     } catch (err) {
       console.error('Error updating status:', err);
       alert('Failed to update status');
+    }
+  };
+
+  const deleteEnrollment = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this enrollment?')) return;
+    
+    try {
+      const { getSupabase } = await import('../lib/supabase');
+      const supabase = await getSupabase();
+      
+      const { error } = await supabase
+        .from('enrollments')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      // Refresh the data
+      loadEnrollments();
+      if (selectedEnrollment?.id === id) {
+        setSelectedEnrollment(null);
+      }
+    } catch (err) {
+      console.error('Error deleting enrollment:', err);
+      alert('Failed to delete enrollment');
     }
   };
 
@@ -97,30 +128,41 @@ export default function AdminDashboard() {
     pending: enrollments.filter((e) => e.status === 'pending').length,
     contacted: enrollments.filter((e) => e.status === 'contacted').length,
     enrolled: enrollments.filter((e) => e.status === 'enrolled').length,
+    cancelled: enrollments.filter((e) => e.status === 'cancelled').length,
   };
 
   const exportToCSV = () => {
-    const headers = ['Name', 'Email', 'Phone', 'Course', 'Status', 'Created At', 'Message'];
+    const headers = ['ID', 'Name', 'Email', 'Phone', 'Course', 'Status', 'Message', 'Consent', 'Created At', 'Updated At'];
     const rows = filteredEnrollments.map((e) => [
+      e.id,
       e.full_name,
       e.email,
       e.phone,
       e.course,
       e.status,
-      new Date(e.created_at).toLocaleString(),
       e.message || '',
+      e.consent ? 'Yes' : 'No',
+      new Date(e.created_at).toLocaleString(),
+      new Date(e.updated_at).toLocaleString(),
     ]);
 
     const csv = [headers, ...rows].map((row) => row.map((cell) => `"${cell}"`).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `enrollments-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
   };
 
-  if (isLoading) {
+  const handleRefresh = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
+
+  if (isLoading && enrollments.length === 0) {
     return (
       <div className="min-h-screen bg-navy flex items-center justify-center">
         <div className="text-white text-xl">Loading enrollments...</div>
@@ -128,7 +170,7 @@ export default function AdminDashboard() {
     );
   }
 
-  if (error) {
+  if (error && enrollments.length === 0) {
     return (
       <div className="min-h-screen bg-navy flex items-center justify-center">
         <div className="text-center">
@@ -141,13 +183,28 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-navy via-navy-dark to-navy">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-white text-3xl font-bold mb-2">Admin Dashboard</h1>
-          <p className="text-soft-white">Manage course enrollments and applications</p>
+      {/* Header with Logout */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-white text-3xl font-bold mb-2">Admin Dashboard</h1>
+            <p className="text-soft-white">Manage course enrollments and applications</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <Button onClick={handleRefresh} variant="secondary">
+              Refresh
+            </Button>
+            <Button onClick={onLogout} variant="secondary">
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
+            </Button>
+          </div>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
           <div className="bg-navy-dark border-2 border-electric-yellow/30 rounded-lg p-6">
             <div className="text-soft-white text-sm mb-1">Total Applications</div>
             <div className="text-white text-3xl font-bold">{stats.total}</div>
@@ -164,8 +221,13 @@ export default function AdminDashboard() {
             <div className="text-soft-white text-sm mb-1">Enrolled</div>
             <div className="text-matrix-green text-3xl font-bold">{stats.enrolled}</div>
           </div>
+          <div className="bg-navy-dark border-2 border-electric-red/30 rounded-lg p-6">
+            <div className="text-soft-white text-sm mb-1">Cancelled</div>
+            <div className="text-electric-red text-3xl font-bold">{stats.cancelled}</div>
+          </div>
         </div>
 
+        {/* Search and Filter Section */}
         <div className="bg-navy-dark rounded-lg p-6 mb-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
             <div className="flex-1">
@@ -196,10 +258,11 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          {/* Enrollments Table */}
+          <div className="overflow-x-auto rounded-lg border border-electric-yellow/20">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-electric-yellow/20">
+                <tr className="bg-navy/50">
                   <th className="text-left py-3 px-4 text-soft-white font-semibold">Name</th>
                   <th className="text-left py-3 px-4 text-soft-white font-semibold">Contact</th>
                   <th className="text-left py-3 px-4 text-soft-white font-semibold">Course</th>
@@ -212,26 +275,35 @@ export default function AdminDashboard() {
                 {filteredEnrollments.map((enrollment) => (
                   <tr
                     key={enrollment.id}
-                    className="border-b border-electric-yellow/10 hover:bg-navy/50 transition-colors cursor-pointer"
+                    className="border-b border-electric-yellow/10 hover:bg-navy/30 transition-colors cursor-pointer"
                     onClick={() => setSelectedEnrollment(enrollment)}
                   >
                     <td className="py-4 px-4">
                       <div className="flex items-center space-x-3">
                         <UserCircle className="w-8 h-8 text-electric-yellow" />
-                        <span className="text-white font-medium">{enrollment.full_name}</span>
+                        <div>
+                          <span className="text-white font-medium block">{enrollment.full_name}</span>
+                          <span className="text-soft-white text-sm">ID: {enrollment.id.substring(0, 8)}...</span>
+                        </div>
                       </div>
                     </td>
                     <td className="py-4 px-4">
                       <div className="text-soft-white space-y-1">
                         <div className="flex items-center space-x-2">
                           <Mail className="w-4 h-4" />
-                          <a href={`mailto:${enrollment.email}`} className="hover:text-electric-yellow">
+                          <a href={`mailto:${enrollment.email}`} className="hover:text-electric-yellow truncate">
                             {enrollment.email}
                           </a>
                         </div>
                         <div className="flex items-center space-x-2">
                           <Phone className="w-4 h-4" />
-                          <a href={`https://wa.me/${enrollment.phone.replace(/[^0-9]/g, '')}`} className="hover:text-matrix-green">
+                          <a 
+                            href={`https://wa.me/${enrollment.phone.replace(/[^0-9]/g, '')}`} 
+                            className="hover:text-matrix-green truncate"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             {enrollment.phone}
                           </a>
                         </div>
@@ -256,20 +328,24 @@ export default function AdminDashboard() {
                       </div>
                     </td>
                     <td className="py-4 px-4">
-                      <select
-                        value={enrollment.status}
-                        onChange={(e) => {
-                          e.stopPropagation();
-                          updateStatus(enrollment.id, e.target.value);
-                        }}
-                        className="px-3 py-1 rounded bg-navy border border-electric-yellow/30 text-white text-sm focus:outline-none focus:ring-2 focus:ring-electric-yellow"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="contacted">Contacted</option>
-                        <option value="enrolled">Enrolled</option>
-                        <option value="cancelled">Cancelled</option>
-                      </select>
+                      <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
+                        <select
+                          value={enrollment.status}
+                          onChange={(e) => updateStatus(enrollment.id, e.target.value)}
+                          className="px-3 py-1 rounded bg-navy border border-electric-yellow/30 text-white text-sm focus:outline-none focus:ring-2 focus:ring-electric-yellow"
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="contacted">Contacted</option>
+                          <option value="enrolled">Enrolled</option>
+                          <option value="cancelled">Cancelled</option>
+                        </select>
+                        <button
+                          onClick={() => deleteEnrollment(enrollment.id)}
+                          className="px-3 py-1 rounded bg-electric-red/20 border border-electric-red/30 text-electric-red text-sm hover:bg-electric-red/30 transition-colors"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -278,24 +354,32 @@ export default function AdminDashboard() {
 
             {filteredEnrollments.length === 0 && (
               <div className="text-center py-12 text-soft-white">
-                No enrollments found matching your criteria.
+                <AlertCircle className="w-12 h-12 mx-auto mb-4 text-electric-yellow/50" />
+                <p>No enrollments found matching your criteria.</p>
+                <Button onClick={() => { setSearchTerm(''); setFilterStatus('all'); }} className="mt-4">
+                  Clear Filters
+                </Button>
               </div>
             )}
           </div>
         </div>
       </div>
 
+      {/* Enrollment Details Modal */}
       {selectedEnrollment && (
         <div
           className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
           onClick={() => setSelectedEnrollment(null)}
         >
           <div
-            className="bg-navy-dark rounded-lg p-8 max-w-2xl w-full border-2 border-electric-yellow/30"
+            className="bg-navy-dark rounded-lg p-8 max-w-2xl w-full border-2 border-electric-yellow/30 max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-start mb-6">
-              <h2 className="text-white text-2xl font-bold">Application Details</h2>
+              <div>
+                <h2 className="text-white text-2xl font-bold">Application Details</h2>
+                <p className="text-soft-white text-sm mt-1">ID: {selectedEnrollment.id}</p>
+              </div>
               <button
                 onClick={() => setSelectedEnrollment(null)}
                 className="text-soft-white hover:text-white"
@@ -305,9 +389,21 @@ export default function AdminDashboard() {
             </div>
 
             <div className="space-y-6">
-              <div>
-                <label className="text-soft-white text-sm font-semibold">Full Name</label>
-                <div className="text-white text-lg mt-1">{selectedEnrollment.full_name}</div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="text-soft-white text-sm font-semibold">Full Name</label>
+                  <div className="text-white text-lg mt-1">{selectedEnrollment.full_name}</div>
+                </div>
+                <div>
+                  <label className="text-soft-white text-sm font-semibold">Consent Given</label>
+                  <div className="text-white text-lg mt-1">
+                    {selectedEnrollment.consent ? (
+                      <span className="text-matrix-green">✓ Yes</span>
+                    ) : (
+                      <span className="text-electric-red">✗ No</span>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -325,6 +421,8 @@ export default function AdminDashboard() {
                   <a
                     href={`https://wa.me/${selectedEnrollment.phone.replace(/[^0-9]/g, '')}`}
                     className="text-matrix-green hover:underline block mt-1"
+                    target="_blank"
+                    rel="noopener noreferrer"
                   >
                     {selectedEnrollment.phone}
                   </a>
@@ -339,7 +437,9 @@ export default function AdminDashboard() {
               {selectedEnrollment.message && (
                 <div>
                   <label className="text-soft-white text-sm font-semibold">Message</label>
-                  <div className="text-white mt-1 bg-navy p-4 rounded-lg">{selectedEnrollment.message}</div>
+                  <div className="text-white mt-1 bg-navy p-4 rounded-lg whitespace-pre-wrap">
+                    {selectedEnrollment.message}
+                  </div>
                 </div>
               )}
 
@@ -364,10 +464,32 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="text-soft-white text-sm font-semibold">Last Updated</label>
+                  <div className="text-white mt-1">
+                    {new Date(selectedEnrollment.updated_at).toLocaleString()}
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="mt-8 flex justify-end">
-              <Button onClick={() => setSelectedEnrollment(null)}>Close</Button>
+            <div className="mt-8 flex justify-between">
+              <Button onClick={() => deleteEnrollment(selectedEnrollment.id)} variant="secondary" className="bg-electric-red/20 border-electric-red/30 text-electric-red hover:bg-electric-red/30">
+                Delete Application
+              </Button>
+              <div className="flex gap-4">
+                <Button onClick={() => setSelectedEnrollment(null)} variant="secondary">
+                  Close
+                </Button>
+                <Button onClick={() => {
+                  updateStatus(selectedEnrollment.id, 'contacted');
+                  setSelectedEnrollment(null);
+                }}>
+                  Mark as Contacted
+                </Button>
+              </div>
             </div>
           </div>
         </div>

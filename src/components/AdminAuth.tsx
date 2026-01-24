@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Lock, Mail } from 'lucide-react';
+import { Lock, Mail, AlertCircle } from 'lucide-react';
 import Button from './Button';
 
 interface AdminAuthProps {
@@ -18,25 +18,21 @@ export default function AdminAuth({ onAuthenticated }: AdminAuthProps) {
     setIsLoading(true);
 
     try {
-      const { getSupabase } = await import('../lib/supabase');
-      const supabase = await getSupabase();
-
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (authError) throw authError;
-
-      if (data.session) {
-        onAuthenticated();
-      }
-    } catch (err) {
+      const { adminLogin } = await import('../lib/supabase');
+      await adminLogin(email, password);
+      onAuthenticated();
+    } catch (err: any) {
       console.error('Login error:', err);
-      setError(err instanceof Error ? err.message : 'Login failed. Please check your credentials.');
+      setError(err.message || 'Login failed. Please check your credentials.');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleDemoLogin = async () => {
+    // This is just for demo purposes - remove in production
+    setEmail('demo@matrixnexus.com');
+    setPassword('demo123');
   };
 
   return (
@@ -56,7 +52,8 @@ export default function AdminAuth({ onAuthenticated }: AdminAuthProps) {
 
           <form onSubmit={handleLogin} className="space-y-6">
             {error && (
-              <div className="bg-electric-red/10 border border-electric-red/30 rounded-lg p-4">
+              <div className="bg-electric-red/10 border border-electric-red/30 rounded-lg p-4 flex items-start space-x-3">
+                <AlertCircle className="w-5 h-5 text-electric-red flex-shrink-0 mt-0.5" />
                 <p className="text-electric-red text-sm">{error}</p>
               </div>
             )}
@@ -73,8 +70,9 @@ export default function AdminAuth({ onAuthenticated }: AdminAuthProps) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full pl-12 pr-4 py-3 bg-navy border border-electric-yellow/30 rounded-lg text-white placeholder-soft-white/50 focus:outline-none focus:ring-2 focus:ring-electric-yellow"
+                  className="w-full pl-12 pr-4 py-3 bg-navy border border-electric-yellow/30 rounded-lg text-white placeholder-soft-white/50 focus:outline-none focus:ring-2 focus:ring-electric-yellow focus:border-transparent"
                   placeholder="admin@matrixnexus.com"
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -91,24 +89,48 @@ export default function AdminAuth({ onAuthenticated }: AdminAuthProps) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full pl-12 pr-4 py-3 bg-navy border border-electric-yellow/30 rounded-lg text-white placeholder-soft-white/50 focus:outline-none focus:ring-2 focus:ring-electric-yellow"
+                  className="w-full pl-12 pr-4 py-3 bg-navy border border-electric-yellow/30 rounded-lg text-white placeholder-soft-white/50 focus:outline-none focus:ring-2 focus:ring-electric-yellow focus:border-transparent"
                   placeholder="Enter your password"
+                  disabled={isLoading}
                 />
               </div>
             </div>
 
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-gradient-to-r from-electric-pink via-vivid-purple to-vivid-indigo hover:opacity-90"
-            >
-              {isLoading ? 'Logging in...' : 'Login to Dashboard'}
-            </Button>
+            <div className="space-y-3">
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-gradient-to-r from-electric-pink via-vivid-purple to-vivid-indigo hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                    Logging in...
+                  </>
+                ) : (
+                  'Login to Dashboard'
+                )}
+              </Button>
+
+              {/* Demo button - remove in production */}
+              <Button
+                type="button"
+                onClick={handleDemoLogin}
+                variant="ghost"
+                className="w-full text-sm opacity-75 hover:opacity-100"
+                disabled={isLoading}
+              >
+                Fill demo credentials
+              </Button>
+            </div>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-soft-white text-sm">
               For security reasons, only authorized personnel can access this area.
+            </p>
+            <p className="text-soft-white/60 text-xs mt-2">
+              Contact system administrator if you need access.
             </p>
           </div>
         </div>

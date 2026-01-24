@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Shield } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Button from './Button';
 
 const LOGO_URL = 'https://res.cloudinary.com/dh1oznegj/image/upload/v1759335115/matrix_nexus_logo_wk1cij.png';
@@ -7,14 +8,24 @@ const LOGO_URL = 'https://res.cloudinary.com/dh1oznegj/image/upload/v1759335115/
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Check if we're on the admin page
+  const isAdminPage = location.pathname === '/admin';
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
-    window.addEventListener('scroll', handleScroll);
+    
+    // Only add scroll listener if we're not on admin page
+    if (!isAdminPage) {
+      window.addEventListener('scroll', handleScroll);
+    }
+    
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [isAdminPage]);
 
   const navLinks = [
     { label: 'Home', href: '#home' },
@@ -26,12 +37,76 @@ export default function Navigation() {
   ];
 
   const scrollToSection = (href: string) => {
-    const element = document.querySelector(href);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-      setIsOpen(false);
+    if (isAdminPage) {
+      // If on admin page, navigate to home first, then scroll
+      navigate('/');
+      setTimeout(() => {
+        const element = document.querySelector(href);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    } else {
+      const element = document.querySelector(href);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+    setIsOpen(false);
+  };
+
+  const handleLogoClick = () => {
+    if (isAdminPage) {
+      navigate('/');
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
+
+  const handleAdminClick = () => {
+    navigate('/admin');
+    setIsOpen(false);
+  };
+
+  const handleHomeClick = () => {
+    navigate('/');
+    setIsOpen(false);
+  };
+
+  // Don't show navigation on admin page
+  if (isAdminPage) {
+    return (
+      <nav className="fixed top-0 w-full z-50 bg-navy/95 backdrop-blur-xl shadow-2xl border-b-2 border-cyan-electric/20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-20">
+            <button
+              onClick={handleHomeClick}
+              className="flex items-center space-x-3 focus-visible-ring rounded"
+              aria-label="Go to Home"
+            >
+              <img
+                src={LOGO_URL}
+                alt="Matrix Nexus Logo"
+                className="h-12 w-auto"
+              />
+              <span className="text-white font-heading font-bold text-xl hidden sm:block">
+                Matrix Nexus Admin
+              </span>
+            </button>
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleHomeClick}
+              >
+                Back to Site
+              </Button>
+            </div>
+          </div>
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav
@@ -44,7 +119,7 @@ export default function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           <button
-            onClick={() => scrollToSection('#home')}
+            onClick={handleLogoClick}
             className="flex items-center space-x-3 focus-visible-ring rounded"
             aria-label="Matrix Nexus Coretech Home"
           >
@@ -68,6 +143,14 @@ export default function Navigation() {
                 {link.label}
               </button>
             ))}
+            {/* Admin Link */}
+            <button
+              onClick={handleAdminClick}
+              className="text-electric-yellow hover:text-electric-pink transition-colors duration-200 font-medium focus-visible-ring rounded px-2 py-1 flex items-center space-x-1"
+            >
+              <Shield className="w-4 h-4" />
+              <span>Admin</span>
+            </button>
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
@@ -110,6 +193,14 @@ export default function Navigation() {
                 {link.label}
               </button>
             ))}
+            {/* Admin Link in Mobile */}
+            <button
+              onClick={handleAdminClick}
+              className="block w-full text-left text-electric-yellow hover:text-electric-pink transition-colors duration-200 font-medium py-2 focus-visible-ring rounded px-2 flex items-center space-x-2"
+            >
+              <Shield className="w-4 h-4" />
+              <span>Admin Panel</span>
+            </button>
             <div className="pt-4 space-y-3">
               <Button
                 variant="ghost"
